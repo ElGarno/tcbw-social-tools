@@ -45,6 +45,7 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
           </div>
         </>
       ) : homeMatches && homeMatches.length > 0 ? (
+        <>
         <Field label="Heimspiel">
           <select className="select" value={selectedIdx} onChange={e => {
             const m = homeMatches[parseInt(e.target.value, 10)];
@@ -58,8 +59,13 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
               <option key={i} value={i}>{matchLabel(m)}</option>
             ))}
           </select>
-          <Hint>Nur Heimspiele — Datum & Uhrzeit werden aus liga.nu übernommen.</Hint>
+          <Hint>Heimspiele aus liga.nu — Gegner, Datum, Uhrzeit werden automatisch übernommen.</Hint>
         </Field>
+        <Field label="Uhrzeit">
+          <Input value={data.dateLine2} onChange={v => set({ dateLine2: v })} placeholder="13:00 Uhr" />
+          <Hint>Vorausgefüllt aus dem Spielplan — bei verschobener Anstoßzeit manuell anpassen.</Hint>
+        </Field>
+      </>
       ) : (
         <Hint>Diese Mannschaft hat keine Heimspiele in der aktuellen Saison.</Hint>
       )}
