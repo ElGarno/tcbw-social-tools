@@ -5,3 +5,5 @@ dist
 .vite
 src/data/teams.json
 .idea
+
+.superpowers/

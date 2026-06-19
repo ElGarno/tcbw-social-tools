@@ -1,11 +1,27 @@
 import React from "react";
 import { Field, Input, NumberInput, Hint, TeamSelect, TEAMS_DATA } from "../ui.jsx";
-import { resolveTeamMode, findMatchIndex } from "../../lib/resolve-team-mode.js";
+import { resolveTeamMode } from "../../lib/resolve-team-mode.js";
 import { matchLabel } from "../../lib/format-date.js";
+import { splitResult } from "../../lib/match-derive.js";
 
 export const MatchResultForm = ({ data, set, variant }) => {
   const mode = resolveTeamMode(data.team, variant, TEAMS_DATA);
-  const selectedIdx = mode.matches ? findMatchIndex(data.team, data.opponent, data.date, TEAMS_DATA) : -1;
+  // Results are for matches already played.
+  const played = mode.matches?.filter(m => m.result) ?? null;
+  const hasPlayed = played && played.length > 0;
+  const selectedIdx = hasPlayed
+    ? played.findIndex(m => m.opponent === data.opponent && m.date === data.date)
+    : -1;
+
+  const applyMatch = (m) => {
+    const score = splitResult(m.result, m.home);
+    set({
+      opponent: m.opponent,
+      date: m.date,
+      location: m.home ? "Heimspiel" : "Auswärts",
+      ...(score ? { home: score.us, away: score.them } : {}),
+    });
+  };
 
   return (
     <>
@@ -13,26 +29,33 @@ export const MatchResultForm = ({ data, set, variant }) => {
       <Field label="Mannschaft">
         <TeamSelect value={data.team} onChange={v => {
           const t = TEAMS_DATA[v];
-          const newMode = resolveTeamMode(v, variant, TEAMS_DATA);
-          if (newMode.isPokal) {
-            set({ team: v, league: t.league, opponent: "", date: "", location: "Heimspiel" });
+          const pl = t.matches?.filter(m => m.result) ?? null;
+          if (pl && pl.length > 0) {
+            set({ team: v, league: t.league });
+            applyMatch(pl[0]);
           } else {
-            const m = t.matches[0];
-            set({
-              team: v, league: t.league,
-              opponent: m.opponent, date: m.date,
-              location: m.home ? "Heimspiel" : "Auswärts",
-            });
+            set({ team: v, league: t.league, opponent: "", date: "", location: "Heimspiel" });
           }
         }} />
         <Hint>Liga: <strong>{mode.league}</strong></Hint>
       </Field>
 
-      {mode.isPokal ? (
+      {hasPlayed ? (
+        <Field label="Spiel">
+          <select className="select" value={selectedIdx} onChange={e => {
+            applyMatch(played[parseInt(e.target.value, 10)]);
+          }}>
+            {played.map((m, i) => (
+              <option key={i} value={i}>{matchLabel(m)} — {m.result}</option>
+            ))}
+          </select>
+          <Hint>Gespielte Spiele aus liga.nu — Gegner, Datum, Heim/Auswärts und Ergebnis werden vorausgefüllt.</Hint>
+        </Field>
+      ) : (
         <>
           <Field label="Gegner">
             <Input value={data.opponent} onChange={v => set({ opponent: v })} placeholder="Gegner manuell eintragen" />
-            <Hint>Pokal — nächste Runde unbekannt, bitte manuell eintragen.</Hint>
+            <Hint>Keine gespielten Spiele im Spielplan — bitte manuell eintragen.</Hint>
           </Field>
           <Field label="Datum">
             <Input value={data.date} onChange={v => set({ date: v })} placeholder="z.B. 04.07.2026" />
@@ -44,18 +67,6 @@ export const MatchResultForm = ({ data, set, variant }) => {
             </select>
           </Field>
         </>
-      ) : (
-        <Field label="Spiel">
-          <select className="select" value={selectedIdx} onChange={e => {
-            const m = mode.matches[parseInt(e.target.value, 10)];
-            set({ opponent: m.opponent, date: m.date, location: m.home ? "Heimspiel" : "Auswärts" });
-          }}>
-            {mode.matches.map((m, i) => (
-              <option key={i} value={i}>{matchLabel(m)}</option>
-            ))}
-          </select>
-          <Hint>Spielplan aus liga.nu — Datum, Uhrzeit, Heim/Auswärts werden automatisch übernommen.</Hint>
-        </Field>
       )}
 
       <div className="form-section-title">Ergebnis</div>
