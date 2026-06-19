@@ -44,11 +44,13 @@ export function parseTeamMd(md) {
     const gastIsUs = HOME_PATTERN.test(gast);
     if (!heimIsUs && !gastIsUs) continue;
 
+    const resultCell = cells[4];
     matches.push({
       date,
       time,
       opponent: heimIsUs ? gast.replace(/\*\*/g, "").trim() : heim.replace(/\*\*/g, "").trim(),
       home: heimIsUs,
+      result: (!resultCell || resultCell === "-") ? null : resultCell,
     });
   }
 
