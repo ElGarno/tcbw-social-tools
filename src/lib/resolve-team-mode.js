@@ -6,7 +6,7 @@ export function resolveTeamMode(team, variant, teamsData) {
   return {
     isPokal,
     league: t?.league ?? "",
-    matches: isPokal ? null : (t?.matches ?? null),
+    matches: t?.matches ?? null,
   };
 }
 
