@@ -1,5 +1,6 @@
 import React from "react";
 import { CourtLines, Wappen, BrandMark, Eyebrow } from "./shared.jsx";
+import { announcementCopy } from "../lib/match-derive.js";
 
 /**
  * MatchAnnouncement — one component, three formats, two variants.
@@ -12,15 +13,17 @@ export const MatchAnnouncement = ({ format = "portrait", variant = "league", dat
   const isStory = format === "story";
   const isSquare = format === "square";
 
+  const isHome = data?.isHome ?? true;
+  const copy = announcementCopy(isHome, variant);
   const d = {
     team: "Herren 40",
     opponent: "TC Iserlohn",
     dateLine1: "30. Mai",
     dateLine2: "13:00 Uhr",
     league: "Südwestfalenliga",
-    location: "Tennisanlage Burg Schnellenberg",
-    cta: "Komm vorbei",
-    eyebrow: variant === "pokal" ? "Pokal-Heimspiel" : "Nächstes Heimspiel",
+    location: isHome ? "Tennisanlage Burg Schnellenberg" : "Auswärts",
+    cta: copy.cta,
+    eyebrow: copy.eyebrow,
     ...data,
   };
 
@@ -85,12 +88,22 @@ export const MatchAnnouncement = ({ format = "portrait", variant = "league", dat
           zIndex: 2,
         }}
       >
-        <Eyebrow
-          scale={1.6}
-          color={variant === "pokal" ? "#fb923c" : "var(--blue-200)"}
-        >
-          {d.eyebrow}
-        </Eyebrow>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {copy.badge && (
+            <span style={{
+              alignSelf: "flex-start",
+              fontFamily: "var(--font-sans)", fontWeight: 800, fontSize: 18,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              color: "#fff", background: "#dc2626",
+              padding: "4px 14px", borderRadius: 8,
+            }}>
+              {copy.badge}
+            </span>
+          )}
+          <Eyebrow scale={1.6} color={variant === "pokal" ? "#fb923c" : "var(--blue-200)"}>
+            {d.eyebrow}
+          </Eyebrow>
+        </div>
         <Wappen size={isStory ? 130 : 110} />
       </div>
 
@@ -134,7 +147,7 @@ export const MatchAnnouncement = ({ format = "portrait", variant = "league", dat
           }}
         >
           <span style={{ fontStyle: "italic", fontWeight: 400, color: "rgba(255,255,255,0.6)", marginRight: 18 }}>
-            vs.
+            {copy.connector}
           </span>
           {d.opponent}
         </div>

@@ -24,8 +24,8 @@ export const TEMPLATES = {
     },
   },
   "match-announcement": {
-    label: "Heimspiel",
-    sublabel: "Ankündigung vor dem Match",
+    label: "Spielankündigung",
+    sublabel: "Ankündigung vor dem Match (Heim & Auswärts)",
     formats: ["square", "portrait", "story"],
     variants: [
       { id: "league", label: "Liga",  accent: "blue" },
@@ -35,6 +35,7 @@ export const TEMPLATES = {
     defaults: {
       team: "Herren 40",
       opponent: "Tennisclub Iserlohn",
+      isHome: true,
       dateLine1: "30. Mai",
       dateLine2: "13:00 Uhr",
       league: "Südwestfalenliga",
