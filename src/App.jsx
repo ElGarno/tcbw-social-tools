@@ -85,7 +85,7 @@ export default function App() {
           onSelectVariant={setVariant}
           formatLabels={formatLabels}
         >
-          <Form data={data} set={set} variant={variant} />
+          <Form data={data} set={set} variant={variant} setVariant={setVariant} />
         </Sidebar>
         <Preview
           template={tpl}

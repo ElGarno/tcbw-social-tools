@@ -4,7 +4,7 @@ import { resolveTeamMode } from "../../lib/resolve-team-mode.js";
 import { matchLabel } from "../../lib/format-date.js";
 import { splitResult } from "../../lib/match-derive.js";
 
-export const MatchResultForm = ({ data, set, variant }) => {
+export const MatchResultForm = ({ data, set, variant, setVariant }) => {
   const mode = resolveTeamMode(data.team, variant, TEAMS_DATA);
   // All scheduled matches — also those without a result yet (not yet on liga.nu).
   // The score is prefilled when liga.nu already has it, otherwise entered manually.
@@ -23,6 +23,13 @@ export const MatchResultForm = ({ data, set, variant }) => {
       // Prefill score from liga.nu when available, otherwise reset for manual entry.
       ...(score ? { home: score.us, away: score.them } : { home: 0, away: 0 }),
     });
+    // Auto-select the design (Sieg/Niederlage) from the fetched score.
+    // A deliberate Pokal choice is kept; draws leave the variant untouched.
+    if (score && variant !== "pokal") {
+      const us = Number(score.us);
+      const them = Number(score.them);
+      if (us !== them) setVariant(us > them ? "win" : "loss");
+    }
   };
 
   return (

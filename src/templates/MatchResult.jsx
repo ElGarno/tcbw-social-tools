@@ -31,6 +31,15 @@ export const MatchResult = ({ format = "square", variant = "win", data }) => {
     ...data,
   };
 
+  // Eyebrow wording follows home/away + variant (not hard-coded "Heimspiel").
+  const isHome = d.location === "Heimspiel";
+  const eyebrowTag =
+    variant === "pokal"
+      ? "WTV Vereinspokal"
+      : variant === "win"
+      ? isHome ? "Heimsieg" : "Auswärtssieg"
+      : isHome ? "Heimspiel" : "Auswärtsspiel";
+
   // Background depends on variant:
   // win  -> hero gradient (deep navy) with court lines
   // loss -> light neutral, contained
@@ -99,7 +108,7 @@ export const MatchResult = ({ format = "square", variant = "win", data }) => {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <Eyebrow scale={1.4} color={a.primary === "#4b5563" ? "var(--gray-500)" : a.primary === "#1e56a0" ? "var(--blue-300)" : "#fb923c"}>
-            {variant === "pokal" ? "WTV Vereinspokal" : a.tag}
+            {eyebrowTag}
           </Eyebrow>
           <div
             style={{
