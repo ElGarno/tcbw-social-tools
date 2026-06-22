@@ -6,11 +6,12 @@ import { splitResult } from "../../lib/match-derive.js";
 
 export const MatchResultForm = ({ data, set, variant }) => {
   const mode = resolveTeamMode(data.team, variant, TEAMS_DATA);
-  // Results are for matches already played.
-  const played = mode.matches?.filter(m => m.result) ?? null;
-  const hasPlayed = played && played.length > 0;
-  const selectedIdx = hasPlayed
-    ? played.findIndex(m => m.opponent === data.opponent && m.date === data.date)
+  // All scheduled matches — also those without a result yet (not yet on liga.nu).
+  // The score is prefilled when liga.nu already has it, otherwise entered manually.
+  const matches = mode.matches ?? null;
+  const hasMatches = matches && matches.length > 0;
+  const selectedIdx = hasMatches
+    ? matches.findIndex(m => m.opponent === data.opponent && m.date === data.date)
     : -1;
 
   const applyMatch = (m) => {
@@ -19,7 +20,8 @@ export const MatchResultForm = ({ data, set, variant }) => {
       opponent: m.opponent,
       date: m.date,
       location: m.home ? "Heimspiel" : "Auswärts",
-      ...(score ? { home: score.us, away: score.them } : {}),
+      // Prefill score from liga.nu when available, otherwise reset for manual entry.
+      ...(score ? { home: score.us, away: score.them } : { home: 0, away: 0 }),
     });
   };
 
@@ -29,10 +31,10 @@ export const MatchResultForm = ({ data, set, variant }) => {
       <Field label="Mannschaft">
         <TeamSelect value={data.team} onChange={v => {
           const t = TEAMS_DATA[v];
-          const pl = t.matches?.filter(m => m.result) ?? null;
-          if (pl && pl.length > 0) {
+          const ms = t.matches ?? null;
+          if (ms && ms.length > 0) {
             set({ team: v, league: t.league });
-            applyMatch(pl[0]);
+            applyMatch(ms[0]);
           } else {
             set({ team: v, league: t.league, opponent: "", date: "", location: "Heimspiel" });
           }
@@ -40,22 +42,22 @@ export const MatchResultForm = ({ data, set, variant }) => {
         <Hint>Liga: <strong>{mode.league}</strong></Hint>
       </Field>
 
-      {hasPlayed ? (
+      {hasMatches ? (
         <Field label="Spiel">
           <select className="select" value={selectedIdx} onChange={e => {
-            applyMatch(played[parseInt(e.target.value, 10)]);
+            applyMatch(matches[parseInt(e.target.value, 10)]);
           }}>
-            {played.map((m, i) => (
-              <option key={i} value={i}>{matchLabel(m)} — {m.result}</option>
+            {matches.map((m, i) => (
+              <option key={i} value={i}>{matchLabel(m)}{m.result ? ` — ${m.result}` : " — noch kein Ergebnis"}</option>
             ))}
           </select>
-          <Hint>Gespielte Spiele aus liga.nu — Gegner, Datum, Heim/Auswärts und Ergebnis werden vorausgefüllt.</Hint>
+          <Hint>Alle Spiele aus dem Spielplan — Gegner, Datum und Heim/Auswärts werden vorausgefüllt. Liegt das Ergebnis schon auf liga.nu vor, wird es übernommen, sonst unten manuell eintragen.</Hint>
         </Field>
       ) : (
         <>
           <Field label="Gegner">
             <Input value={data.opponent} onChange={v => set({ opponent: v })} placeholder="Gegner manuell eintragen" />
-            <Hint>Keine gespielten Spiele im Spielplan — bitte manuell eintragen.</Hint>
+            <Hint>Keine Spiele im Spielplan — bitte manuell eintragen.</Hint>
           </Field>
           <Field label="Datum">
             <Input value={data.date} onChange={v => set({ date: v })} placeholder="z.B. 04.07.2026" />
