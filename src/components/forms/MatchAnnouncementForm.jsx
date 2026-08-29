@@ -9,13 +9,22 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
   // Announcements are for matches not yet played.
   const upcoming = mode.matches?.filter(m => !m.result) ?? null;
   const hasUpcoming = upcoming && upcoming.length > 0;
-  const selectedIdx = hasUpcoming
-    ? upcoming.findIndex(m => m.opponent === data.opponent && formatDateLong(m.date) === data.dateLine1)
+  // Keep the picked match selected even after Datum/Uhrzeit were edited by hand:
+  // trust the stored index as long as it still points at the same opponent,
+  // otherwise (team or variant switched) fall back to matching on the data.
+  const storedIdx = hasUpcoming && upcoming[data.matchIdx]?.opponent === data.opponent
+    ? data.matchIdx
     : -1;
+  const selectedIdx = storedIdx >= 0
+    ? storedIdx
+    : hasUpcoming
+      ? upcoming.findIndex(m => m.opponent === data.opponent && formatDateLong(m.date) === data.dateLine1)
+      : -1;
 
-  const applyMatch = (m) => {
+  const applyMatch = (m, idx) => {
     const copy = announcementCopy(m.home, variant);
     set({
+      matchIdx: idx,
       opponent: m.opponent,
       dateLine1: formatDateLong(m.date),
       dateLine2: m.time + " Uhr",
@@ -35,9 +44,9 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
           const up = t.matches?.filter(m => !m.result) ?? null;
           if (up && up.length > 0) {
             set({ team: v, league: t.league });
-            applyMatch(up[0]);
+            applyMatch(up[0], 0);
           } else {
-            set({ team: v, league: t.league, opponent: "", dateLine1: "", dateLine2: "" });
+            set({ team: v, league: t.league, matchIdx: -1, opponent: "", dateLine1: "", dateLine2: "" });
           }
         }} />
         <Hint>Liga: <strong>{mode.league}</strong></Hint>
@@ -47,7 +56,8 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
         <>
           <Field label="Spiel">
             <select className="select" value={selectedIdx} onChange={e => {
-              applyMatch(upcoming[parseInt(e.target.value, 10)]);
+              const i = parseInt(e.target.value, 10);
+              applyMatch(upcoming[i], i);
             }}>
               {upcoming.map((m, i) => (
                 <option key={i} value={i}>{matchLabel(m)}</option>
@@ -55,10 +65,11 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
             </select>
             <Hint>Kommende Spiele aus liga.nu (Heim & Auswärts) — Auswahl setzt Wording automatisch.</Hint>
           </Field>
-          <Field label="Uhrzeit">
-            <Input value={data.dateLine2} onChange={v => set({ dateLine2: v })} placeholder="13:00 Uhr" />
-            <Hint>Vorausgefüllt aus dem Spielplan — bei verschobener Anstoßzeit manuell anpassen.</Hint>
-          </Field>
+          <div className="field-row">
+            <Field label="Datum"><Input value={data.dateLine1} onChange={v => set({ dateLine1: v })} placeholder="30. Mai" /></Field>
+            <Field label="Uhrzeit"><Input value={data.dateLine2} onChange={v => set({ dateLine2: v })} placeholder="13:00 Uhr" /></Field>
+          </div>
+          <Hint>Datum und Uhrzeit sind aus dem Spielplan vorausgefüllt — bei verlegtem Spiel hier anpassen.</Hint>
         </>
       ) : (
         <>
