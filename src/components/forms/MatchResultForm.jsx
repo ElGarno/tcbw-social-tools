@@ -10,13 +10,22 @@ export const MatchResultForm = ({ data, set, variant, setVariant }) => {
   // The score is prefilled when liga.nu already has it, otherwise entered manually.
   const matches = mode.matches ?? null;
   const hasMatches = matches && matches.length > 0;
-  const selectedIdx = hasMatches
-    ? matches.findIndex(m => m.opponent === data.opponent && m.date === data.date)
+  // Keep the picked match selected even after the date was edited by hand:
+  // trust the stored index as long as it still points at the same opponent,
+  // otherwise (team or variant switched) fall back to matching on the data.
+  const storedIdx = hasMatches && matches[data.matchIdx]?.opponent === data.opponent
+    ? data.matchIdx
     : -1;
+  const selectedIdx = storedIdx >= 0
+    ? storedIdx
+    : hasMatches
+      ? matches.findIndex(m => m.opponent === data.opponent && m.date === data.date)
+      : -1;
 
-  const applyMatch = (m) => {
+  const applyMatch = (m, idx) => {
     const score = splitResult(m.result, m.home);
     set({
+      matchIdx: idx,
       opponent: m.opponent,
       date: m.date,
       location: m.home ? "Heimspiel" : "Auswärts",
@@ -41,25 +50,32 @@ export const MatchResultForm = ({ data, set, variant, setVariant }) => {
           const ms = t.matches ?? null;
           if (ms && ms.length > 0) {
             set({ team: v, league: t.league });
-            applyMatch(ms[0]);
+            applyMatch(ms[0], 0);
           } else {
-            set({ team: v, league: t.league, opponent: "", date: "", location: "Heimspiel" });
+            set({ team: v, league: t.league, matchIdx: -1, opponent: "", date: "", location: "Heimspiel" });
           }
         }} />
         <Hint>Liga: <strong>{mode.league}</strong></Hint>
       </Field>
 
       {hasMatches ? (
-        <Field label="Spiel">
-          <select className="select" value={selectedIdx} onChange={e => {
-            applyMatch(matches[parseInt(e.target.value, 10)]);
-          }}>
-            {matches.map((m, i) => (
-              <option key={i} value={i}>{matchLabel(m)}{m.result ? ` — ${m.result}` : " — noch kein Ergebnis"}</option>
-            ))}
-          </select>
-          <Hint>Alle Spiele aus dem Spielplan — Gegner, Datum und Heim/Auswärts werden vorausgefüllt. Liegt das Ergebnis schon auf liga.nu vor, wird es übernommen, sonst unten manuell eintragen.</Hint>
-        </Field>
+        <>
+          <Field label="Spiel">
+            <select className="select" value={selectedIdx} onChange={e => {
+              const i = parseInt(e.target.value, 10);
+              applyMatch(matches[i], i);
+            }}>
+              {matches.map((m, i) => (
+                <option key={i} value={i}>{matchLabel(m)}{m.result ? ` — ${m.result}` : " — noch kein Ergebnis"}</option>
+              ))}
+            </select>
+            <Hint>Alle Spiele aus dem Spielplan — Gegner, Datum und Heim/Auswärts werden vorausgefüllt. Liegt das Ergebnis schon auf liga.nu vor, wird es übernommen, sonst unten manuell eintragen.</Hint>
+          </Field>
+          <Field label="Datum">
+            <Input value={data.date} onChange={v => set({ date: v })} placeholder="z.B. 04.07.2026" />
+            <Hint>Vorausgefüllt aus dem Spielplan — bei verlegtem Spiel hier anpassen.</Hint>
+          </Field>
+        </>
       ) : (
         <>
           <Field label="Gegner">
