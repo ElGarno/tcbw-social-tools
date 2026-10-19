@@ -1,5 +1,5 @@
 import React from "react";
-import { CourtLines, Wappen, BrandMark, Eyebrow } from "./shared.jsx";
+import { CourtLines, Wappen, BrandMark, Eyebrow, Snowflakes } from "./shared.jsx";
 import { announcementCopy } from "../lib/match-derive.js";
 
 /**
@@ -73,6 +73,7 @@ export const MatchAnnouncement = ({ format = "portrait", variant = "league", dat
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "55%", opacity: 0.12 }}>
         <CourtLines color="#ffffff" strokeScale={3} opacity={1} />
       </div>
+      {d.team.endsWith("Winter") && <Snowflakes />}
 
       {/* TOP ROW */}
       <div

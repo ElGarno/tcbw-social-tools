@@ -2,7 +2,7 @@ import React from "react";
 import { Field, Input, Hint, TeamSelect, TEAMS_DATA } from "../ui.jsx";
 import { resolveTeamMode } from "../../lib/resolve-team-mode.js";
 import { formatDateLong, matchLabel } from "../../lib/format-date.js";
-import { announcementCopy } from "../../lib/match-derive.js";
+import { announcementCopy, announcementLocation } from "../../lib/match-derive.js";
 
 export const MatchAnnouncementForm = ({ data, set, variant }) => {
   const mode = resolveTeamMode(data.team, variant, TEAMS_DATA);
@@ -21,7 +21,7 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
       ? upcoming.findIndex(m => m.opponent === data.opponent && formatDateLong(m.date) === data.dateLine1)
       : -1;
 
-  const applyMatch = (m, idx) => {
+  const applyMatch = (m, idx, team = data.team) => {
     const copy = announcementCopy(m.home, variant);
     set({
       matchIdx: idx,
@@ -31,7 +31,7 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
       isHome: m.home,
       eyebrow: copy.eyebrow,
       cta: copy.cta,
-      location: m.home ? "Tennisanlage Burg Schnellenberg" : "Auswärts",
+      location: announcementLocation(m.home, team),
     });
   };
 
@@ -44,7 +44,7 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
           const up = t.matches?.filter(m => !m.result) ?? null;
           if (up && up.length > 0) {
             set({ team: v, league: t.league });
-            applyMatch(up[0], 0);
+            applyMatch(up[0], 0, v);
           } else {
             set({ team: v, league: t.league, matchIdx: -1, opponent: "", dateLine1: "", dateLine2: "" });
           }
@@ -85,7 +85,7 @@ export const MatchAnnouncementForm = ({ data, set, variant }) => {
             <select className="select" value={data.isHome ? "home" : "away"} onChange={e => {
               const isHome = e.target.value === "home";
               const copy = announcementCopy(isHome, variant);
-              set({ isHome, eyebrow: copy.eyebrow, cta: copy.cta, location: isHome ? "Tennisanlage Burg Schnellenberg" : "Auswärts" });
+              set({ isHome, eyebrow: copy.eyebrow, cta: copy.cta, location: announcementLocation(isHome, data.team) });
             }}>
               <option value="home">Heimspiel</option>
               <option value="away">Auswärts</option>

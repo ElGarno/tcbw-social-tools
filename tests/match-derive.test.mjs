@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { announcementCopy, splitResult } from "../src/lib/match-derive.js";
+import { announcementCopy, announcementLocation, splitResult } from "../src/lib/match-derive.js";
 
 test("announcementCopy: home league", () => {
   assert.deepEqual(announcementCopy(true, "league"), {
@@ -32,4 +32,10 @@ test("splitResult: unparseable returns null", () => {
   assert.equal(splitResult("", true), null);
   assert.equal(splitResult(null, true), null);
   assert.equal(splitResult("abc", true), null);
+});
+
+test("announcementLocation: summer home at club, winter home in hall, away", () => {
+  assert.equal(announcementLocation(true, "Herren 30"), "Tennisanlage Burg Schnellenberg");
+  assert.equal(announcementLocation(true, "Herren 30 Winter"), "Tennishalle Milstenau");
+  assert.equal(announcementLocation(false, "Damen Winter"), "Auswärts");
 });

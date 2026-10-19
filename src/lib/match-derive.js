@@ -17,6 +17,12 @@ export function announcementCopy(isHome, variant) {
   };
 }
 
+/** Venue line for an announcement: winter teams play in the hall, summer teams at the club. */
+export function announcementLocation(isHome, team) {
+  if (!isHome) return "Auswärts";
+  return team?.endsWith("Winter") ? "Tennishalle Milstenau" : "Tennisanlage Burg Schnellenberg";
+}
+
 /** Split a liga.nu "home:guest" result into our/their score from our perspective. */
 export function splitResult(result, isHome) {
   if (!result) return null;
